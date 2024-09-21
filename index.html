@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standortanzeige mit OpenStreetMap</title>
+    <title>Live Standortanzeige mit OpenStreetMap</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
@@ -25,24 +25,39 @@
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // Standort abrufen
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
+        let marker;
 
-                // Marker für den Standort hinzufügen
-                const marker = L.marker([lat, lon]).addTo(map);
-                marker.bindPopup("Du bist hier!").openPopup();
+        // Standort abrufen und verfolgen
+        function startTracking() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
 
-                // Karte zentrieren
-                map.setView([lat, lon], 13);
-            }, () => {
-                alert("Standort kann nicht abgerufen werden.");
-            });
-        } else {
-            alert("Geolocation wird von diesem Browser nicht unterstützt.");
+                    // Marker hinzufügen, falls noch nicht vorhanden
+                    if (!marker) {
+                        marker = L.marker([lat, lon]).addTo(map);
+                        marker.bindPopup("Du bist hier!").openPopup();
+                    } else {
+                        // Marker aktualisieren
+                        marker.setLatLng([lat, lon]);
+                    }
+
+                    // Karte zentrieren
+                    map.setView([lat, lon], 13);
+                }, (error) => {
+                    console.error(error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+                });
+            } else {
+                alert("Geolocation wird von diesem Browser nicht unterstützt.");
+            }
         }
+
+        startTracking(); // Tracking starten
     </script>
 </body>
 </html>
